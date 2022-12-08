@@ -12,7 +12,7 @@ namespace PIF1006_TP3
             var transposed = GetTransposedArray(message, cle);
 
             var cipheredMessage = CipherMessage(transposed, cle);
-            Console.WriteLine(cipheredMessage);
+            Console.WriteLine($"Ciphered message: {cipheredMessage}");
             var cipheredBytes = Encoding.UTF8.GetBytes(cipheredMessage);
 
             var iv = (byte)Encoding.UTF8.GetBytes(cle).GetValue(0)!;
@@ -57,29 +57,85 @@ namespace PIF1006_TP3
             }
 
             var decrypted = Encoding.UTF8.GetString(decryptedBytes);
-
-            
-            //WIP - Sam
-            /*
             var transposedArray = GetTransposedArray(decrypted, cle);
-
+            
             var arr = new char[transposedArray.GetLength(0), transposedArray.GetLength(1)];
+            
+            // La longueur de chaque colonne (c'est aussi le nombre de rangées)
+            var columnLength = (int)Math.Ceiling((double)decrypted.Length / cle.Length);
+            var index = 0;
             for (var i = 0; i < cle.Length; i++)
             {
-                var c = cle[i];
-                var targetCol = i;
-                var fromCol = c - '0' - 1;
-
-                for (int targetRow = 0; targetRow < arr.GetLength(0); targetRow++)
+                // Si l'index n'à pas été modifié (sinon, on garde l'index modifié)
+                // Voir référence: #modify-index#
+                if (index == (i - 1) * columnLength)
                 {
-                    arr[targetRow, targetCol] = transposedArray[targetRow, fromCol];
-
+                     index = i * columnLength;
+                }
+                
+                // Calculer la prochaine quantité de caractères à placer dans le tableau
+                var quantityToGet = columnLength;
+                
+                /*
+                 * Si nous sommes proches de la fin du string "decrypted"
+                 */
+                if (columnLength + i * columnLength > decrypted.Length)
+                {
+                    quantityToGet = decrypted.Length - columnLength * i;
+                    
+                    if (columnLength + (i * columnLength - 1) > decrypted.Length)
+                    {
+                        quantityToGet = decrypted.Length - (i * columnLength - 1);
+                    }
+                }
+                else if (columnLength + index > decrypted.Length)
+                {
+                    quantityToGet = decrypted.Length - index;
+                }
+                
+                var charactersGotten = decrypted.Substring(index, quantityToGet);
+                
+                /*
+                 *  #modify-index#
+                 * 
+                 *  Si la colonne contient une case vide à la fin à cause que le texte n'est pas de longueur = "columnLength(rowsCount) * cle.Length(columnCount)"
+                 *  Alors on va modifier l'index pour récupérer seulement la quantité nécessaires de lettres (
+                 *
+                 *  Exemple: Les deux cases blanches des colonnes 8 et 6 dans les notes de cours.
+                 *  Ces cases ne doivent pas compter comme des espaces, donc on doit considérer une longueur de colonne columnLength - 1 
+                 */
+                if (cle.Length - i - 1 <= columnLength * cle.Length - decrypted.Length)
+                {
+                    if (cle.Length - i <= columnLength * cle.Length - decrypted.Length)
+                    {
+                       index = i * columnLength - 1;
+                       charactersGotten = decrypted.Substring(index, quantityToGet);
+                    }
+                    else
+                    {
+                        charactersGotten = decrypted.Substring(index, quantityToGet - 1);
+                    }
+                }
+                
+                // Placer les lettres dans le tableau au bon endroit (où 'i' se trouve dans la clé)
+                for (var targetRow = 0; targetRow < arr.GetLength(0); targetRow++)
+                {
+                    // Si on est à la fin du tableau et qu'il y a moins de lettre que d'espaces à combler, alors on comble avec des espaces
+                    arr[targetRow, cle.IndexOf((i + 1).ToString()[0])] = targetRow >= charactersGotten.Length ? ' ' : charactersGotten[targetRow];
                 }
             }
 
-            PrintMatrix(arr);*/
+            // Construire une string à partir du tableau maintenant bien ordonné
+            var result = new StringBuilder();
+            for (var col = 0; col < arr.GetLength(0); col++)
+            {
+                for (var row = 0; row < arr.GetLength(1); row++)
+                {
+                    result.Append(arr[col, row]);
+                }
+            }
             
-            return decrypted;
+            return result.ToString();
         }
 
         private static char[,] GetTransposedArray(string message, string cle)
