@@ -16,10 +16,10 @@ namespace PIF1006_TP3
                 message = Console.ReadLine();
             }
             
-            var key = "7 1 4 2 3 5 8 6";
+            var key = "7 1 4 5 2 3 8 6 9";
             if (!IsDev)
             {
-                Console.WriteLine("Veuillez entrer la clé de chiffrement avec un espace entre chaque nombre (les nombres doivent se suivre et n'avoir qu'un incrément de 1): ");
+                Console.WriteLine("Veuillez entrer la clé de chiffrement avec un espace entre chaque nombre (les nombres doivent se suivre, n'avoir qu'un incrément de 1 et commencer à 1 (inclusivement): ");
                 key = Console.ReadLine();
             }
 
