@@ -15,7 +15,7 @@ namespace PIF1006_TP3
             Console.WriteLine($"Ciphered message: {cipheredMessage}");
             var cipheredBytes = Encoding.UTF8.GetBytes(cipheredMessage);
 
-            var iv = (byte)Encoding.UTF8.GetBytes(cle.ToString()).GetValue(0)!;
+            var iv = (byte)Encoding.UTF8.GetBytes(cle.ToString()!).GetValue(0)!;
             var res = new byte[cipheredBytes.Length];
 
             for (var i = 0; i < cipheredBytes.Length; i++)
@@ -41,7 +41,7 @@ namespace PIF1006_TP3
         {
             //L'input est un message encodé en base64, on doit le décoder.
             var decodedBytes = Convert.FromBase64String(message); 
-            var iv = (byte)Encoding.UTF8.GetBytes(cle.ToString()).GetValue(0)!;
+            var iv = (byte)Encoding.UTF8.GetBytes(cle.ToString()!).GetValue(0)!;
             var decryptedBytes = new byte[decodedBytes.Length];
 
             for (var i = 0; i < decodedBytes.Length; i++)
@@ -57,6 +57,8 @@ namespace PIF1006_TP3
             }
 
             var decrypted = Encoding.UTF8.GetString(decryptedBytes);
+            var decryptedStack = new Stack<char>();
+            decrypted.Reverse().ToList().ForEach(c => decryptedStack.Push(c));
             
             var transposedArray = GetTransposedArray(decrypted, cle);
             var arr = new char[transposedArray.GetLength(0), transposedArray.GetLength(1)];
@@ -64,85 +66,29 @@ namespace PIF1006_TP3
             // Calculer la longueur de chaque colonne (c'est aussi le nombre de rangées)
             var columnLength = (int)Math.Ceiling((double)decrypted.Length / cle.Count);
             var emptyPositions = cle.Count - (int)Math.Ceiling((double)decrypted.Length % cle.Count);
-            var index = 0;
             for (var idxCle = 0; idxCle < cle.Count; idxCle++)
             {
-                // Si l'index n'à pas été modifié (sinon, on garde l'index modifié)
-                // Voir référence: #modify-index#
-                if (index == (idxCle - 1) * columnLength)
-                {
-                     index = idxCle * columnLength;
-                }
-                
                 // Calculer la prochaine quantité de caractères à placer dans le tableau
                 var quantityToGet = columnLength;
-                /*
-                 * Si nous sommes proches de la fin du string "decrypted"
-                 */
-                if (columnLength + idxCle * columnLength > decrypted.Length)
-                {
-                    quantityToGet = decrypted.Length - columnLength * idxCle;
-                    
-                    if (columnLength + (idxCle * columnLength - 1) > decrypted.Length)
-                    {
-                        quantityToGet = decrypted.Length - (idxCle * columnLength - 1);
-                    }
-                }
-                else if (columnLength + index > decrypted.Length)
-                {
-                    quantityToGet = decrypted.Length - index;
-                }
-                /*
-                 *  #modify-index#
-                 * 
-                 *  Si la colonne contient une case vide à la fin à cause que le texte n'est pas de longueur = "columnLength(rowsCount) * cle.Length(columnCount)"
-                 *  Alors on va modifier l'index pour récupérer seulement la quantité nécessaires de lettres (
-                 *
-                 *  Exemple: Les deux cases blanches des colonnes 8 et 6 dans les notes de cours.
-                 *  Ces cases ne doivent pas compter comme des espaces, donc on doit considérer une longueur de colonne columnLength - 1 
-                 */
-                if (cle.Count - idxCle <= emptyPositions)
-                {
-                    index = idxCle * columnLength - 1;
-                }
-                
-                var charactersGotten = decrypted.Substring(index, quantityToGet);
-                
-                var positionOfIdxCleInCle = cle.IndexOf((idxCle + 1));    // (idxCle + 1) car les chiffres de la clé commencent à 1 et non à 0 
-                /*
-                 * Si nous sommes dans une colonne où il devrait y avoir une case vide à la fin
-                 * ET QUE
-                 * L'index n'a pas été modifié 
-                 */
-                if (positionOfIdxCleInCle >= cle.Count - emptyPositions && index == idxCle * columnLength)
-                {
-                    charactersGotten = decrypted.Substring(index, quantityToGet - 1);
-                }
+
+                if (cle.IndexOf(idxCle + 1) >= cle.Count - emptyPositions)
+                    quantityToGet--;
+
+                var charactersGotten = "";
+                for (var i = 0; i < quantityToGet; i++)
+                    charactersGotten += decryptedStack.Pop();
                 
                 // Placer les lettres dans le tableau au bon endroit (où 'i' se trouve dans la clé)
+                // Si on est à la fin du tableau et qu'il y a moins de lettre que d'espaces à combler, alors on comble avec des espaces
                 for (var targetRow = 0; targetRow < arr.GetLength(0); targetRow++)
-                {
-                    // Si on est à la fin du tableau et qu'il y a moins de lettre que d'espaces à combler, alors on comble avec des espaces
                     arr[targetRow, cle.IndexOf((idxCle + 1))] = targetRow >= charactersGotten.Length ? ' ' : charactersGotten[targetRow];
-                }
-                Console.WriteLine("------------------");
-                Console.WriteLine("0123456789");
-                Console.WriteLine(string.Join(null,cle));
-                PrintMatrix(arr);
-                Console.WriteLine(string.Join(null,cle));
-                Console.WriteLine("0123456789");
-                Console.WriteLine("------------------");
             }
 
             // Construire une string à partir du tableau maintenant bien ordonné
             var result = new StringBuilder();
             for (var col = 0; col < arr.GetLength(0); col++)
-            {
                 for (var row = 0; row < arr.GetLength(1); row++)
-                {
                     result.Append(arr[col, row]);
-                }
-            }
             
             return result.ToString();
         }
