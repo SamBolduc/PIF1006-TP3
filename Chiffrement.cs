@@ -47,8 +47,9 @@ namespace PIF1006_TP3
             {
                 decryptedBytes[i] = (byte)(
                     i == 0 
-                        ? decodedBytes[i] ^ iv 
-                        : decodedBytes[i] ^ decodedBytes[i - 1]);
+                    ? decodedBytes[i] ^ iv 
+                    : decodedBytes[i] ^ decodedBytes[i - 1]
+                );
             }
 
             var decrypted = Encoding.UTF8.GetString(decryptedBytes);
@@ -60,7 +61,13 @@ namespace PIF1006_TP3
             
             // Calculer la longueur de chaque colonne (c'est aussi le nombre de rangées)
             var columnLength = (int)Math.Ceiling((double)decrypted.Length / cle.Count);
-            var emptyPositions = decrypted.Length % cle.Count != 0 ? cle.Count - (int)Math.Ceiling((double)decrypted.Length % cle.Count) : 0;
+            
+            // Si la longueur du message est un multiple de la longueur de la clé, alors il n'y a aucune position vide 
+            var emptyPositions = 
+                decrypted.Length % cle.Count == 0 
+                ? 0 
+                : cle.Count - (int)Math.Ceiling((double)decrypted.Length % cle.Count);
+            
             for (var idxCle = 0; idxCle < cle.Count; idxCle++)
             {
                 // Calculer la prochaine quantité de caractères à placer dans le tableau
