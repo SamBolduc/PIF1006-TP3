@@ -7,7 +7,7 @@ namespace PIF1006_TP3
 {
     public static class Chiffrement
     {
-        public static string Chiffrer(string message, List<int> cle,byte iv)
+        public static string Chiffrer(string message, List<int> cle, byte iv)
         {
             var transposed = GetTransposedArray(message, cle);
 
@@ -45,14 +45,10 @@ namespace PIF1006_TP3
 
             for (var i = 0; i < decodedBytes.Length; i++)
             {
-                if (i == 0)
-                {
-                    decryptedBytes[i] = (byte)(decodedBytes[i] ^ iv);
-                }
-                else
-                {
-                    decryptedBytes[i] = (byte)(decodedBytes[i] ^ decodedBytes[i - 1]);
-                }
+                decryptedBytes[i] = (byte)(
+                    i == 0 
+                        ? decodedBytes[i] ^ iv 
+                        : decodedBytes[i] ^ decodedBytes[i - 1]);
             }
 
             var decrypted = Encoding.UTF8.GetString(decryptedBytes);
@@ -64,7 +60,7 @@ namespace PIF1006_TP3
             
             // Calculer la longueur de chaque colonne (c'est aussi le nombre de rangées)
             var columnLength = (int)Math.Ceiling((double)decrypted.Length / cle.Count);
-            var emptyPositions = cle.Count - (int)Math.Ceiling((double)decrypted.Length % cle.Count);
+            var emptyPositions = decrypted.Length % cle.Count != 0 ? cle.Count - (int)Math.Ceiling((double)decrypted.Length % cle.Count) : 0;
             for (var idxCle = 0; idxCle < cle.Count; idxCle++)
             {
                 // Calculer la prochaine quantité de caractères à placer dans le tableau
@@ -127,6 +123,7 @@ namespace PIF1006_TP3
             return string.Join("", res);
         }
 
+        // Pour debug
         private static void PrintMatrix(char[,] matrix)
         {
             var ret = new List<string>();
