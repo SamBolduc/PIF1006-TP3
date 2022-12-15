@@ -7,7 +7,7 @@ namespace PIF1006_TP3
 {
     public static class Chiffrement
     {
-        public static string Chiffrer(string message, List<int> cle)
+        public static string Chiffrer(string message, List<int> cle,byte iv)
         {
             var transposed = GetTransposedArray(message, cle);
 
@@ -15,7 +15,6 @@ namespace PIF1006_TP3
             Console.WriteLine($"Ciphered message: {cipheredMessage}");
             var cipheredBytes = Encoding.UTF8.GetBytes(cipheredMessage);
 
-            var iv = (byte)Encoding.UTF8.GetBytes(cle.ToString()!).GetValue(0)!;
             var res = new byte[cipheredBytes.Length];
 
             for (var i = 0; i < cipheredBytes.Length; i++)
@@ -37,11 +36,11 @@ namespace PIF1006_TP3
             return encoded;
         }
 
-        public static string Dechiffrer(string message, List<int> cle)
+        public static string Dechiffrer(string message, List<int> cle,byte iv)
         {
             //L'input est un message encodé en base64, on doit le décoder.
             var decodedBytes = Convert.FromBase64String(message); 
-            var iv = (byte)Encoding.UTF8.GetBytes(cle.ToString()!).GetValue(0)!;
+
             var decryptedBytes = new byte[decodedBytes.Length];
 
             for (var i = 0; i < decodedBytes.Length; i++)
